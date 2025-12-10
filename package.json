@@ -1,7 +1,7 @@
 {
   "name": "ps-ai-tool-backend",
   "version": "1.0.0",
-  "description": "PS AI Tool simple backend (step 1)",
+  "description": "PS AI Tool backend - Step 1 (Express)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
