@@ -1,6 +1,6 @@
-// =======================================
-// PS AI Tool – STEP 4 (AUTH + TOKEN CHECK)
-// =======================================
+// ================================
+// PS AI Tool - STEP 4 (JWT PROTECTED ROUTE)
+// ================================
 
 const express = require("express");
 const cors = require("cors");
@@ -12,20 +12,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = "PS_AI_TOOL_SECRET_KEY";
 
-// ------------ MIDDLEWARE ------------
+// ---------------- MIDDLEWARE ----------------
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// ------------ TEMP DATABASE ------------
+// ---------------- TEMP DATABASE ----------------
 const users = [];
 
-// ------------ ROOT ------------
+// ---------------- ROOT ----------------
 app.get("/", (req, res) => {
   res.send("✅ PS AI Tool Backend STEP 4 is Running");
 });
 
-// ------------ REGISTER ------------
+// ---------------- REGISTER ----------------
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
@@ -33,7 +33,8 @@ app.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Email & password required" });
   }
 
-  if (users.find(u => u.email === email)) {
+  const userExists = users.find(u => u.email === email);
+  if (userExists) {
     return res.status(400).json({ error: "User already exists" });
   }
 
@@ -47,10 +48,13 @@ app.post("/register", async (req, res) => {
 
   users.push(user);
 
-  res.json({ message: "✅ User registered successfully" });
+  res.json({
+    message: "✅ User registered",
+    user: { id: user.id, email: user.email }
+  });
 });
 
-// ------------ LOGIN ------------
+// ---------------- LOGIN ----------------
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -65,46 +69,53 @@ app.post("/login", async (req, res) => {
   }
 
   const token = jwt.sign(
-    { userId: user.id, email: user.email },
+    { id: user.id, email: user.email },
     JWT_SECRET,
     { expiresIn: "1h" }
   );
 
-  res.json({ message: "✅ Login successful", token });
+  res.json({
+    message: "✅ Login successful",
+    token
+  });
 });
 
-// ------------ TOKEN CHECK ------------
-function verifyToken(req, res, next) {
-  const auth = req.headers.authorization;
-  if (!auth) return res.status(403).json({ error: "Token required" });
+// ---------------- AUTH MIDDLEWARE ----------------
+function auth(req, res, next) {
+  const header = req.headers["authorization"];
+  if (!header) {
+    return res.status(401).json({ error: "Token missing" });
+  }
 
-  const token = auth.split(" ")[1];
+  const token = header.split(" ")[1];
 
-  jwt.verify(token, JWT_SECRET, (err, decoded) => {
-    if (err) return res.status(401).json({ error: "Invalid token" });
+  try {
+    const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
     next();
-  });
+  } catch {
+    return res.status(401).json({ error: "Invalid token" });
+  }
 }
 
-// ------------ PROTECTED ROUTE ------------
-app.get("/me", verifyToken, (req, res) => {
+// ---------------- PROTECTED ROUTE ----------------
+app.get("/me", auth, (req, res) => {
   res.json({
-    message: "✅ Token working",
+    message: "✅ Protected data",
     user: req.user
   });
 });
 
-// ------------ STATUS ------------
+// ---------------- STATUS ----------------
 app.get("/status", (req, res) => {
   res.json({
     step: 4,
     users: users.length,
-    status: "OK"
+    status: "ok"
   });
 });
 
-// ------------ START SERVER ------------
+// ---------------- START SERVER ----------------
 app.listen(PORT, () => {
   console.log("🚀 Server running on port " + PORT);
 });
