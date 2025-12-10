@@ -1,11 +1,14 @@
 {
-  "name": "ps-ai-tool",
+  "name": "ps-ai-tool-backend",
   "version": "1.0.0",
-  "description": "Pakistan Star AI Tool - Starter Backend",
+  "description": "PS AI Tool simple backend (step 1)",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
-  "author": "Pakistan Star AI",
-  "license": "MIT"
+  "dependencies": {
+    "express": "^4.19.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.0.0"
+  }
 }
