@@ -1,7 +1,6 @@
-// ===============================
-// PS AI TOOL - STEP 2 BACKEND
-// User Register + Login (Basic)
-// ===============================
+// ================================
+// PS AI Tool - STEP 3 (AUTH SYSTEM)
+// ================================
 
 const express = require("express");
 const cors = require("cors");
@@ -11,49 +10,33 @@ const jwt = require("jsonwebtoken");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = "ps_ai_tool_secret_key"; // abhi simple
+const JWT_SECRET = "PS_AI_TOOL_SECRET_KEY";
 
-// --------------------
-// Middlewares
-// --------------------
+// ---------------- MIDDLEWARE ----------------
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// --------------------
-// Fake DB (temporary)
-// --------------------
+// ---------------- TEMP DATABASE (STEP 3) ----------------
+// Abhi simple array (database baad me aayega)
 const users = [];
 
-// --------------------
-// Routes
-// --------------------
-
-// ✅ Root
+// ---------------- ROOT CHECK ----------------
 app.get("/", (req, res) => {
-  res.send("✅ PS AI Tool Backend (Step 2) is Running");
+  res.send("✅ PS AI Tool Backend STEP 3 is Running");
 });
 
-// ✅ Status
-app.get("/status", (req, res) => {
-  res.json({
-    status: "ok",
-    step: 2,
-    server: "live"
-  });
-});
-
-// ✅ Register
-app.post("/api/register", async (req, res) => {
+// ---------------- REGISTER ----------------
+app.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
-    return res.status(400).json({ message: "Email & password required" });
+    return res.status(400).json({ error: "Email & password required" });
   }
 
   const existingUser = users.find(u => u.email === email);
   if (existingUser) {
-    return res.status(400).json({ message: "User already exists" });
+    return res.status(400).json({ error: "User already exists" });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -68,22 +51,22 @@ app.post("/api/register", async (req, res) => {
 
   res.json({
     message: "✅ User registered successfully",
-    userId: newUser.id
+    user: { id: newUser.id, email: newUser.email }
   });
 });
 
-// ✅ Login
-app.post("/api/login", async (req, res) => {
+// ---------------- LOGIN ----------------
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   const user = users.find(u => u.email === email);
   if (!user) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 
   const isMatch = await bcrypt.compare(password, user.password);
   if (!isMatch) {
-    return res.status(401).json({ message: "Invalid credentials" });
+    return res.status(401).json({ error: "Invalid credentials" });
   }
 
   const token = jwt.sign(
@@ -98,7 +81,16 @@ app.post("/api/login", async (req, res) => {
   });
 });
 
-// --------------------
+// ---------------- STATUS ----------------
+app.get("/status", (req, res) => {
+  res.json({
+    status: "ok",
+    step: 3,
+    users: users.length
+  });
+});
+
+// ---------------- START SERVER ----------------
 app.listen(PORT, () => {
-  console.log(`✅ Server running on port ${PORT}`);
+  console.log("🚀 Server running on port " + PORT);
 });
