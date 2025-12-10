@@ -1,59 +1,53 @@
-const http = require("http");
+// PS AI Tool - Step 1 Backend (Express)
 
+// 1) Imports
+const express = require("express");
+const cors = require("cors");
+const helmet = require("helmet");
+
+// 2) Basic setup
+const app = express();
 const PORT = process.env.PORT || 3000;
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
-const server = http.createServer(async (req, res) => {
+// 3) Middlewares
+app.use(helmet());        // Security headers
+app.use(cors());          // Allow frontend later
+app.use(express.json());  // JSON body parser
 
-  if (req.url === "/" && req.method === "GET") {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    return res.end("✅ Pakistan Star AI Tool is Running");
-  }
+// 4) Routes
 
-  if (req.url === "/chat" && req.method === "POST") {
-    let body = "";
-
-    req.on("data", chunk => {
-      body += chunk.toString();
-    });
-
-    req.on("end", async () => {
-      try {
-        const data = JSON.parse(body);
-
-        const response = await fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${OPENAI_API_KEY}`
-          },
-          body: JSON.stringify({
-            model: "gpt-4o-mini",
-            messages: [
-              { role: "user", content: data.message }
-            ]
-          })
-        });
-
-        const result = await response.json();
-        const reply = result.choices[0].message.content;
-
-        res.writeHead(200, { "Content-Type": "application/json" });
-        res.end(JSON.stringify({ reply }));
-
-      } catch (err) {
-        res.writeHead(500);
-        res.end("Error");
-      }
-    });
-
-    return;
-  }
-
-  res.writeHead(404);
-  res.end("Not Found");
+// Root route - simple message
+app.get("/", (req, res) => {
+  res.status(200).send("✅ Pakistan Star AI Tool Backend (Step 1) is Running");
 });
 
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+// Status route - JSON status (jaise pehle tha)
+app.get("/status", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    project: "Pakistan Star AI Tool",
+    server: "live",
+    version: "step-1-express"
+  });
+});
+
+// Simple test API (future wallet / payment yahin se start hoga)
+app.post("/api/message", (req, res) => {
+  const { message } = req.body || {};
+
+  // Abhi sirf echo, baad mein yahin AI, wallet etc. ayega
+  res.status(200).json({
+    received: message || null,
+    reply: "PS AI Tool backend ne tumhara message receive kar liya ✅",
+  });
+});
+
+// 404 route (agar upar se koi route match na ho)
+app.use((req, res) => {
+  res.status(404).send("404 - Not Found (PS AI Tool Step 1)");
+});
+
+// 5) Start server
+app.listen(PORT, () => {
+  console.log("PS AI Tool backend running on port " + PORT);
 });
