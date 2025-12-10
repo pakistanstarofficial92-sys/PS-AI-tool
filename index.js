@@ -1,6 +1,6 @@
-// ================================
-// PS AI Tool - STEP 3 (AUTH SYSTEM)
-// ================================
+// =======================================
+// PS AI Tool – STEP 4 (AUTH + TOKEN CHECK)
+// =======================================
 
 const express = require("express");
 const cors = require("cors");
@@ -12,21 +12,20 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = "PS_AI_TOOL_SECRET_KEY";
 
-// ---------------- MIDDLEWARE ----------------
+// ------------ MIDDLEWARE ------------
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
 
-// ---------------- TEMP DATABASE (STEP 3) ----------------
-// Abhi simple array (database baad me aayega)
+// ------------ TEMP DATABASE ------------
 const users = [];
 
-// ---------------- ROOT CHECK ----------------
+// ------------ ROOT ------------
 app.get("/", (req, res) => {
-  res.send("✅ PS AI Tool Backend STEP 3 is Running");
+  res.send("✅ PS AI Tool Backend STEP 4 is Running");
 });
 
-// ---------------- REGISTER ----------------
+// ------------ REGISTER ------------
 app.post("/register", async (req, res) => {
   const { email, password } = req.body;
 
@@ -34,28 +33,24 @@ app.post("/register", async (req, res) => {
     return res.status(400).json({ error: "Email & password required" });
   }
 
-  const existingUser = users.find(u => u.email === email);
-  if (existingUser) {
+  if (users.find(u => u.email === email)) {
     return res.status(400).json({ error: "User already exists" });
   }
 
   const hashedPassword = await bcrypt.hash(password, 10);
 
-  const newUser = {
+  const user = {
     id: users.length + 1,
     email,
     password: hashedPassword
   };
 
-  users.push(newUser);
+  users.push(user);
 
-  res.json({
-    message: "✅ User registered successfully",
-    user: { id: newUser.id, email: newUser.email }
-  });
+  res.json({ message: "✅ User registered successfully" });
 });
 
-// ---------------- LOGIN ----------------
+// ------------ LOGIN ------------
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -64,8 +59,8 @@ app.post("/login", async (req, res) => {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
-  const isMatch = await bcrypt.compare(password, user.password);
-  if (!isMatch) {
+  const match = await bcrypt.compare(password, user.password);
+  if (!match) {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 
@@ -75,22 +70,41 @@ app.post("/login", async (req, res) => {
     { expiresIn: "1h" }
   );
 
+  res.json({ message: "✅ Login successful", token });
+});
+
+// ------------ TOKEN CHECK ------------
+function verifyToken(req, res, next) {
+  const auth = req.headers.authorization;
+  if (!auth) return res.status(403).json({ error: "Token required" });
+
+  const token = auth.split(" ")[1];
+
+  jwt.verify(token, JWT_SECRET, (err, decoded) => {
+    if (err) return res.status(401).json({ error: "Invalid token" });
+    req.user = decoded;
+    next();
+  });
+}
+
+// ------------ PROTECTED ROUTE ------------
+app.get("/me", verifyToken, (req, res) => {
   res.json({
-    message: "✅ Login successful",
-    token
+    message: "✅ Token working",
+    user: req.user
   });
 });
 
-// ---------------- STATUS ----------------
+// ------------ STATUS ------------
 app.get("/status", (req, res) => {
   res.json({
-    status: "ok",
-    step: 3,
-    users: users.length
+    step: 4,
+    users: users.length,
+    status: "OK"
   });
 });
 
-// ---------------- START SERVER ----------------
+// ------------ START SERVER ------------
 app.listen(PORT, () => {
   console.log("🚀 Server running on port " + PORT);
 });
