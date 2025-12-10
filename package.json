@@ -1,7 +1,7 @@
 {
   "name": "ps-ai-tool-backend",
   "version": "1.0.0",
-  "description": "PS AI Tool backend - Step 1 (Express)",
+  "description": "PS AI Tool backend",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -9,6 +9,8 @@
   "dependencies": {
     "express": "^4.19.2",
     "cors": "^2.8.5",
-    "helmet": "^7.0.0"
+    "helmet": "^7.0.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2"
   }
 }
