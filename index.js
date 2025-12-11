@@ -22,10 +22,13 @@ mongoose
 app.use("/auth", authRoutes);
 app.use("/api", apiRoutes);
 
+// DEFAULT ROUTE
 app.get("/", (req, res) => {
   res.send("PS-AI Tool Backend Running");
 });
 
-app.listen(process.env.PORT || 5000, () =>
-  console.log(`Server running on port ${process.env.PORT}`)
+// FIXED PORT
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () =>
+  console.log(`Server running on port ${PORT}`)
 );
