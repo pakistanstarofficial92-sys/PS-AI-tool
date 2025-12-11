@@ -1,17 +1,108 @@
+// ---------- package.json ----------
 {
   "name": "ps-ai-tool-backend",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "PS AI Tool - Backend (Start)",
+  "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
   },
   "dependencies": {
+    "@prisma/client": "^5.7.0",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^7.0.4"
+    "prisma": "^5.7.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.5",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.3.3"
   }
 }
+
+// ---------- tsconfig.json ----------
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "rootDir": "src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "sourceMap": true
+  },
+  "include": ["src/**/*"]
+}
+
+// ---------- .env.example ----------
+# Copy this to .env and fill values
+PORT=5000
+NODE_ENV=development
+DATABASE_URL="postgresql://user:password@localhost:5432/ps_ai_tool"
+JWT_ACCESS_SECRET="change_this_to_a_strong_secret"
+PRISMA_DATABASE_URL=${DATABASE_URL}
+
+// ---------- src/index.ts ----------
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { PrismaClient } from "@prisma/client";
+
+dotenv.config();
+
+const app = express();
+const prisma = new PrismaClient();
+
+app.use(cors());
+app.use(express.json());
+
+// simple root
+app.get("/", (req, res) => {
+  res.send("✅ Pakistan Star AI Tool Backend is Running");
+});
+
+// simple status
+app.get("/status", (req, res) => {
+  res.json({
+    status: "ok",
+    project: "PS AI Tool",
+    environment: process.env.NODE_ENV || "dev"
+  });
+});
+
+// health / db check
+app.get("/health/db", async (req, res) => {
+  try {
+    // quick prisma test
+    await prisma.$queryRaw`SELECT 1`;
+    res.json({ db: "ok" });
+  } catch (err) {
+    console.error("DB Health Error:", err);
+    res.status(500).json({ db: "error", error: String(err) });
+  }
+});
+
+const PORT = Number(process.env.PORT) || 5000;
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+// gracefully disconnect prisma on exit
+process.on("SIGINT", async () => {
+  await prisma.$disconnect();
+  process.exit(0);
+});
+
+// ---------- src/.gitkeep ----------
+(empty file; creates src folder if needed)
